@@ -1,1 +1,1 @@
-# FlowField
+# Very barebone flowfield, future plans: Add pathfinding to this flowfield

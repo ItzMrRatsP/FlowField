@@ -1,0 +1,33 @@
+{
+    "name": "RNG-GAME",
+    "tree": {
+        "$className": "DataModel",
+        "ReplicatedStorage": {
+            "Packages": {
+                "$path": "Packages"
+            },
+
+            "Assets": {
+                "$className": "Folder",
+                "$ignoreUnknownInstances": true
+            },
+            
+            "$path": "src/shared",
+            "$ignoreUnknownInstances": true
+        },
+
+        "ServerScriptService": {
+            "Server": {
+                "$path": "src/server"
+            }
+        },
+
+        "StarterPlayer": {
+            "StarterPlayerScripts": {
+                "Client": {
+                    "$path": "src/client"
+                }
+            }
+        }
+    }
+}
