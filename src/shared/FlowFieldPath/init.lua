@@ -102,7 +102,7 @@ function FlowField.generateGrids(
 				gridSize,
 				r,
 				c,
-				if isTarget then 0 else blockCost
+				isTarget and 0 or blockCost
 			)
 
 			if blockCost >= 255 then warn("BLOCKED", gridData.grid) end
