@@ -14,8 +14,4 @@ FlowFieldPath.generateGrids(
 	gridsToBlock
 )
 
--- local targetRow = 2
--- local targetColumn = 3
-
-FlowFieldPath.sortOut() -- Sorts the algorithm
--- FlowFieldPath.generateGrids(startPoint, gridSize, rows, columns)
+FlowFieldPath.sortOut()
