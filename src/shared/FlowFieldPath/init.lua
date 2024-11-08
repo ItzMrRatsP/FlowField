@@ -1,6 +1,7 @@
 --!strict
 export type newGrid = {
 	grid: BasePart,
+	CFrame: CFrame,
 	row: number,
 	column: number,
 	cost: number,
@@ -10,19 +11,13 @@ export type newGrid = {
 export type FlowField = {
 	new: (
 		startPoint: BasePart,
-		gridSize: Vector3,
+		gridSize: number,
 		row: number,
-		column: number,
-		cost: number
+		column: number
 	) -> newGrid,
 
-	generateGrids: (
-		startPoint: BasePart,
-		gridSize: Vector3,
-		rows: number,
-		columns: number,
-		toBlock: { [number]: { number } }
-	) -> (),
+	cleanUp: () -> (),
+	generateGrids: (startPoint: BasePart, gridSize: number) -> (),
 
 	sortOut: () -> (),
 	getNeighbor: (currentCell: newGrid) -> newGrid, -- Best grid
@@ -37,27 +32,28 @@ FlowField.Grids = {} -- Grids
 local toCheck: { [string]: newGrid } = {} -- Replace with dict
 local Checked: { [newGrid]: boolean } = {} -- Replace with dict
 
--- Now we can do the AI
-
-local targetRow = 2
-local targetColumn = 3
+local TargetRow = 2
+local TargetColumn = 4
 
 function FlowField.new(
 	startPoint: BasePart,
-	gridSize: Vector3,
+	gridSize: number,
 	row: number,
-	column: number,
-	cost: number
+	column: number
 ): newGrid
 	local self = {}
 
 	self.grid = Instance.new("Part") :: BasePart
-	self.grid.Size = gridSize
-	self.grid.CFrame = CFrame.new(
-		-(startPoint.Size.X / 2) + (row * gridSize.X),
-		startPoint.Position.Y + gridSize.Y,
-		-(startPoint.Size.Z / 2) + (column * gridSize.Z)
-	)
+	self.grid.Size = Vector3.one * gridSize
+
+	self.CFrame = startPoint.CFrame
+		* CFrame.new(
+			-(startPoint.Size.X / 2) - (gridSize / 2) + (row * gridSize),
+			gridSize,
+			-(startPoint.Size.Z / 2) - (gridSize / 2) + (column * gridSize)
+		)
+
+	self.grid.CFrame = self.CFrame
 
 	self.grid.Material = Enum.Material.SmoothPlastic
 	self.grid.Anchored = true
@@ -67,7 +63,7 @@ function FlowField.new(
 
 	self.row = row
 	self.column = column
-	self.cost = cost -- if cost 0 then its the target point.
+	self.cost = 1 -- if cost 0 then its the target point.
 	self.bestCost = math.huge -- Basically an huge number
 
 	return self
@@ -83,36 +79,55 @@ local function getCount(t): number
 	return count
 end
 
-function FlowField.generateGrids(
-	startPoint: BasePart,
-	gridSize: Vector3,
-	rows: number,
-	columns: number
-)
+function FlowField.cleanUp()
+	for _, Data in FlowField.Grids do
+		for _, SubData in Data do
+			SubData.grid:Destroy() -- For now
+		end
+
+		table.clear(Data)
+	end
+
+	table.clear(Checked)
+	table.clear(toCheck)
+end
+
+function FlowField.generateGrids(startPoint: BasePart, gridSize: number)
+	local Row = startPoint.Size.X / gridSize
+	local Column = startPoint.Size.Z / gridSize
+
+	local LUT = {}
+
 	local op = OverlapParams.new()
 	op.FilterDescendantsInstances = { startPoint }
 
-	for r = 1, rows do
+	FlowField.cleanUp()
+
+	for r = 1, Row do
 		FlowField.Grids[r] = {}
 
-		for c = 1, columns do
-			local isTarget = r == targetRow and c == targetColumn
+		for c = 1, Column do
+			local GridData = FlowField.new(startPoint, gridSize, r, c)
 
-			local gridData =
-				FlowField.new(startPoint, gridSize, r, c, isTarget and 0 or 1)
-
-			if #workspace:GetPartsInPart(gridData.grid, op) > 0 then
-				gridData.cost = 255
-			end
-
-			if isTarget then
-				gridData.bestCost = 0
-				toCheck["1"] = gridData
-			end
-
-			FlowField.Grids[r][c] = gridData
+			FlowField.Grids[r][c] = GridData
+			LUT[GridData.grid] = GridData
 		end
 	end
+
+	for Grid, Data in LUT do
+		local isTarget: boolean = Data.row == TargetRow
+			and Data.column == TargetColumn
+
+		if isTarget then
+			Data.bestCost = 0
+			toCheck["1"] = Data
+		end
+
+		if #workspace:GetPartsInPart(Data.grid, op) > 0 then Data.cost = 255 end
+		Grid:Destroy()
+	end
+
+	FlowField.sortOut()
 end
 
 local function getHeatmap(cell)
@@ -157,7 +172,7 @@ function FlowField.sortOut()
 		end
 
 		currentOrder += 1
-		if currentOrder % (35 ^ 2) == 0 then task.wait() end
+		if currentOrder % (255 ^ 2) == 0 then task.wait() end
 	end
 end
 
