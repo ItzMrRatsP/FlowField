@@ -2,7 +2,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local FlowFieldPath = require(ReplicatedStorage.FlowFieldPath)
 
 local Baseplate = workspace.Baseplate
-local GridSize = 10
+local GridSize = 2
 
 local gridsToBlock = { [3] = { [3] = true }, [2] = { [2] = true, [4] = true } }
 
