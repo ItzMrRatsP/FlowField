@@ -42,7 +42,13 @@ local Checked: { [newGrid]: boolean } = {} -- Replace with dict
 local targetRow = 2
 local targetColumn = 3
 
-function FlowField.new(startPoint: BasePart, gridSize: Vector3, row: number, column: number, cost: number): newGrid
+function FlowField.new(
+	startPoint: BasePart,
+	gridSize: Vector3,
+	row: number,
+	column: number,
+	cost: number
+): newGrid
 	local self = {}
 
 	self.grid = Instance.new("Part") :: BasePart
@@ -53,11 +59,9 @@ function FlowField.new(startPoint: BasePart, gridSize: Vector3, row: number, col
 		-(startPoint.Size.Z / 2) + (column * gridSize.Z)
 	)
 
-	-- self.grid.Transparency = 0.75
-
 	self.grid.Material = Enum.Material.SmoothPlastic
 	self.grid.Anchored = true
-	-- self.grid.Transparency = 1
+
 	self.grid.CanCollide = false
 	self.grid.Parent = workspace:FindFirstChild("Grids")
 
@@ -79,7 +83,12 @@ local function getCount(t): number
 	return count
 end
 
-function FlowField.generateGrids(startPoint: BasePart, gridSize: Vector3, rows: number, columns: number)
+function FlowField.generateGrids(
+	startPoint: BasePart,
+	gridSize: Vector3,
+	rows: number,
+	columns: number
+)
 	local op = OverlapParams.new()
 	op.FilterDescendantsInstances = { startPoint }
 
@@ -89,14 +98,11 @@ function FlowField.generateGrids(startPoint: BasePart, gridSize: Vector3, rows: 
 		for c = 1, columns do
 			local isTarget = r == targetRow and c == targetColumn
 
-			local gridData = FlowField.new(startPoint, gridSize, r, c, isTarget and 0 or 1)
+			local gridData =
+				FlowField.new(startPoint, gridSize, r, c, isTarget and 0 or 1)
 
 			if #workspace:GetPartsInPart(gridData.grid, op) > 0 then
 				gridData.cost = 255
-			end
-
-			if gridData.cost >= 255 then
-				warn("BLOCKED", gridData.grid)
 			end
 
 			if isTarget then
@@ -119,36 +125,22 @@ function FlowField.sortOut()
 
 	while getCount(toCheck) > 0 do
 		local currentCell = toCheck[tostring(currentOrder)]
-		if not currentCell then
-			break
-		end
+		if not currentCell then break end
 
 		currentCell[tostring(currentOrder)] = nil
 
 		for row = currentCell.row - 1, currentCell.row + 1 do
-			if not FlowField.Grids[row] then
-				continue
-			end
+			if not FlowField.Grids[row] then continue end
 
 			for column = currentCell.column - 1, currentCell.column + 1 do
-				if row ~= currentCell.row and column % 2 <= 0 then
-					continue
-				end
+				if row ~= currentCell.row and column % 2 <= 0 then continue end
 
 				local Cell = FlowField.Grids[row][column]
 
-				if not Cell then
-					continue
-				end
-				if Cell == currentCell then
-					continue
-				end -- There is no point checking this
-				if Checked[Cell] then
-					continue
-				end
-				if Cell.cost >= 255 then
-					continue
-				end
+				if not Cell then continue end
+				if Cell == currentCell then continue end -- There is no point checking this
+				if Checked[Cell] then continue end
+				if Cell.cost >= 255 then continue end
 
 				if currentCell.bestCost + Cell.cost >= Cell.bestCost then
 					continue
@@ -165,9 +157,7 @@ function FlowField.sortOut()
 		end
 
 		currentOrder += 1
-		if currentOrder % (35 ^ 2) == 0 then
-			task.wait()
-		end
+		if currentOrder % (35 ^ 2) == 0 then task.wait() end
 	end
 end
 
